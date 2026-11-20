@@ -25,7 +25,6 @@ Answer statistics questions reliably, using well-established theory, with verifi
 12. **Measurement error isn't just noise.** If a predictor is a known imprecise proxy (self-report, assay/sensor error, a stand-in for the real construct), flag that naive regression on the observed value biases the slope toward zero (attenuation) and that more data doesn't fix it (FULLER_MEASUREMENT_ERROR) — point to a measurement-error/errors-in-variables model instead of reporting the naive estimate as final. See Step 3.
 13. **Combine estimates, not verdicts.** When the data are the results of several studies, pool each study's effect estimate and standard error (random effects by default), report heterogeneity (tau, I²) and a prediction interval alongside the CI of the average, and never count significant studies or pool p-values. A meta-analysis inherits the biases of its studies and of how they were selected; flag study quality and publication bias, and never present a pooled interval as tighter than the evidence behind it (BORENSTEIN_2009; INTHOUT_2016). See Step 1c.
 14. **Say when you're not sure.** If a detail (exact formula edge case, a specific page number, whether a result generalizes) isn't something you're confident of, say so explicitly instead of guessing.
-15. **Help the user become autonomous.** Besides answering, point the user to the matching page of the companion course (a separate resource of plain-language explainers, how-to guides and notebooks, which you cannot read or link to from here). Name the page by its module and title, choosing only from [course-topics.md](./references/course-topics.md); never invent a page name. Topic pages that have a hands-on guide or notebook point to it in a "Do it yourself" box, so naming the topic page is enough for the user to reach the guide and repeat the analysis without an agent. If the user cannot run generated code or notebooks, or asks how to set up an agent, name the course pages "Set up your computer", "Organize your project" and "Work with an AI agent".
 
 ## Workflow
 
@@ -89,7 +88,7 @@ Use [regression_modeling_template.py](./scripts/regression_modeling_template.py)
 - **Predictive mode**: judge purely by held-out performance (CV / test-set R², RMSE, AUC, etc.); don't interpret coefficients causally.
 - **Missing data, any mode**: report rows dropped via listwise deletion explicitly; point to LITTLE_RUBIN_MISSING rather than improvising if missingness is substantial.
 - **Multicollinearity, any mode with >1 predictor**: run `check_multicollinearity()` from [assumption_checks.py](./scripts/assumption_checks.py) on the predictor/adjustment set before trusting individual coefficients (OBRIEN_2007).
-- **Measurement error, any mode**: if a predictor or outcome is a known noisy proxy (self-report, assay/sensor precision, a stand-in for the real construct), say so explicitly — it biases the coefficient toward zero (attenuation), not just the SE, and doesn't improve with sample size (FULLER_MEASUREMENT_ERROR). Point to a measurement-error-aware approach (regression calibration, SIMEX, or a latent-variable model) instead of reporting the naive estimate as final. The course page "Measurement error" (module 6) explains it in plain language.
+- **Measurement error, any mode**: if a predictor or outcome is a known noisy proxy (self-report, assay/sensor precision, a stand-in for the real construct), say so explicitly — it biases the coefficient toward zero (attenuation), not just the SE, and doesn't improve with sample size (FULLER_MEASUREMENT_ERROR). Point to a measurement-error-aware approach (regression calibration, SIMEX, or a latent-variable model) instead of reporting the naive estimate as final.
 - **Clustered or time-dependent data**: see below before assuming the plain model's independence assumption holds.
 
 ### Clustering and time dependence (check within Step 3, whenever relevant)
@@ -116,9 +115,6 @@ Use [clustered_and_timeseries_template.py](./scripts/clustered_and_timeseries_te
 
 ## Simulation / notebook (optional)
 <only if built — 1-2 sentences pointing to the notebook/script and the key parameters to tweak>
-
-## Learn more
-<the matching course page(s), by module and title, chosen from references/course-topics.md — see principle 15>
 
 ## References
 <author, year, title, chapter/section or URL — see core-references.md>
@@ -149,7 +145,7 @@ Same bias toward a runnable, parameterized artifact over prose-only advice, and 
 
 ## Reference files
 
-- [Course topics: the pages of the companion course, to name in answers](./references/course-topics.md)- [Analysis triage: has data been collected (power/precision), exploratory vs. confirmatory, prediction vs. causal, DAG elicitation questions](./references/analysis-triage.md)
+- [Analysis triage: has data been collected (power/precision), exploratory vs. confirmatory, prediction vs. causal, DAG elicitation questions](./references/analysis-triage.md)
 - [Test decision guide, assumptions & regression equivalents](./references/test-regression-equivalents.md)
 - [Core reference list & citation discipline](./references/core-references.md)
 - [Power/sample-size and precision planning template](./scripts/power_analysis_template.py)

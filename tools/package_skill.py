@@ -32,7 +32,7 @@ NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 # Files that never belong in a package, wherever they are found.
 EXCLUDED_NAMES = {"__pycache__", ".DS_Store", "dist", ".git"}
 SINGLE_FILE_REFERENCES = [
-    "analysis-triage.md", "test-regression-equivalents.md", "core-references.md", "course-topics.md",
+    "analysis-triage.md", "test-regression-equivalents.md", "core-references.md",
 ]
 ZIP_TIMESTAMP = (2020, 1, 1, 0, 0, 0)   # fixed, so rebuilding gives an identical zip
 

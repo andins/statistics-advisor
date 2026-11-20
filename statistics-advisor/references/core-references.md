@@ -53,6 +53,6 @@
 
 Reference by key inline, e.g. "Welch's test is the recommended default (DELACRE_LAKENS_LEYS, 2017)", then expand to the full citation in the References section of the answer using the table above. Only add a chapter/section/page locator when you're confident it's correct.
 
-## Locators used in the companion course's "Learn more" boxes
+## Locators used when citing a page number
 
-Each page of the companion course ends with a "Learn more" box. Page numbers there were checked against the free PDFs: *Regression and Other Stories* (avehtari.github.io/ROS-Examples, 2020-2024 PDF), *Causal Inference: What If* (Aug 2026 PDF, miguelhernan.org/whatifbook) and *An Introduction to Statistical Learning* 2nd ed. (June 2023 corrected PDF). Pagination of other printings may differ by a few pages. Other books are cited by chapter or section only, because their page numbers could not be verified; journal articles use the page ranges from the table above or the published record. The Cochrane Handbook chapter numbers (10 and 13) were checked against the table of contents of version 6.5 online.
+When a citation above includes a page number, it was checked against the free PDFs: *Regression and Other Stories* (avehtari.github.io/ROS-Examples, 2020-2024 PDF), *Causal Inference: What If* (Aug 2026 PDF, miguelhernan.org/whatifbook) and *An Introduction to Statistical Learning* 2nd ed. (June 2023 corrected PDF). Pagination of other printings may differ by a few pages. Other books are cited by chapter or section only, because their page numbers could not be verified; journal articles use the page ranges from the table above or the published record. The Cochrane Handbook chapter numbers (10 and 13) were checked against the table of contents of version 6.5 online.

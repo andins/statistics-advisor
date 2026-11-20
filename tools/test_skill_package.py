@@ -58,7 +58,7 @@ class PackageTests(unittest.TestCase):
                              "dist/", "course_teacher_notes", "package_skill", "install_skill", "/test_"):
                 self.assertNotIn(fragment, name)
 
-    def test_skill_folder_has_no_course_or_tooling_files(self):
+    def test_skill_folder_has_no_stray_or_tooling_files(self):
         on_disk = {p.name for p in package_skill.SKILL_ROOT.iterdir() if p.name not in package_skill.EXCLUDED_NAMES}
         self.assertEqual(on_disk, {"SKILL.md", "references", "scripts"})
 

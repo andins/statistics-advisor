@@ -4,10 +4,14 @@ An [Agent Skills](https://agentskills.io) folder (`SKILL.md`, references, helper
 
 | Folder | What it is |
 |---|---|
-| [`statistics-advisor/`](./statistics-advisor) | The skill itself: `SKILL.md`, `references/` (triage logic, citation list, the list of companion-course topics it is allowed to name) and `scripts/` (runnable reference templates for EDA, power analysis, regression/GLM modeling, assumption checks, causal DAGs, clustered/time-series data, meta-analysis, and a worked t-test-vs-regression example). |
+| [`statistics-advisor/`](./statistics-advisor) | The skill itself: `SKILL.md`, `references/` (triage logic, citation list, test-vs-regression equivalents) and `scripts/` (runnable reference templates for EDA, power analysis, regression/GLM modeling, assumption checks, causal DAGs, clustered/time-series data, meta-analysis, and a worked t-test-vs-regression example). |
 | [`tools/`](./tools) | Scripts to install the skill into an agent tool, to package it for web chats, and to test both of the above. |
 
-This skill is self-contained: nothing under `statistics-advisor/` links to or depends on anything outside this repository. It was split out of a combined teaching repository (a companion statistics course) that still exists as a separate project; `references/course-topics.md` lets the skill *name* a course page by title without needing the course's files present.
+This skill is self-contained: nothing under `statistics-advisor/` links to or depends on anything outside this repository.
+
+## License
+
+[MIT](./LICENSE).
 
 ## Quick start
 
@@ -31,7 +35,3 @@ Everything below runs from this folder. Testing the reference templates (`test_s
 |---|---|
 | Test the skill packaging, installer, and reference templates | `cd tools && python3 -m unittest test_skill_package test_install_skill test_skill_templates` |
 | Build the Claude web-app zip and the single-file version for other chats | `python3 tools/package_skill.py` (writes `dist/`) |
-
-### Keeping `references/course-topics.md` in sync
-
-`references/course-topics.md` lists the companion course's pages, so the agent can name real pages without linking to them. The course and this skill are independent repositories with no automated check between them, so when the course adds, renames or removes a page, update this file by hand to match.

@@ -1,7 +1,8 @@
 """Run the reference templates' own regression tests so they can't silently rot.
 
-Only the meta-analysis template has standalone tests here (it has no course page running its
-code, unlike the other templates, which notebooks/how-to guides in the companion course exercise).
+Only the meta-analysis template has standalone tests here: it's the one template whose helper
+functions (pooling, heterogeneity, forest/funnel plots) are complex enough to be worth testing in
+isolation; the others are adapt-to-the-dataset templates meant to be read and edited per use.
 
 Skipped automatically when the scientific-Python stack (numpy, pandas, scipy, statsmodels,
 scikit-learn, matplotlib, seaborn) isn't installed.
@@ -19,7 +20,7 @@ MISSING = [name for name in REQUIRED if importlib.util.find_spec(name) is None]
 
 @unittest.skipIf(MISSING, f"missing packages: {MISSING}")
 class MetaAnalysisTemplateTests(unittest.TestCase):
-    """The meta-analysis template is a script, not a course page; keep it from rotting here."""
+    """The meta-analysis template's pooling/heterogeneity helpers are worth testing directly."""
 
     @classmethod
     def setUpClass(cls):

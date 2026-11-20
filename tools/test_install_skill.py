@@ -31,7 +31,7 @@ class InstallTests(unittest.TestCase):
                 destination = install_skill.install(tool, home=self.home)
                 self.assertEqual(destination, self.home / folder / "statistics-advisor")
                 self.assertTrue((destination / "SKILL.md").is_file())
-                self.assertTrue((destination / "references" / "course-topics.md").is_file())
+                self.assertTrue((destination / "references" / "test-regression-equivalents.md").is_file())
                 self.assertTrue((destination / "scripts" / "eda_template.py").is_file())
 
     def test_project_scope_uses_the_project_folders(self):
@@ -75,7 +75,7 @@ class InstallTests(unittest.TestCase):
         self.assertFalse((destination / "scripts" / "__pycache__").exists())
 
     def test_source_folder_name_does_not_matter(self):
-        renamed = pathlib.Path(self.tmp.name) / "stats-course-2026-main" / "statistics-advisor"
+        renamed = pathlib.Path(self.tmp.name) / "statistics-advisor-main" / "statistics-advisor"
         shutil.copytree(package_skill.SKILL_ROOT, renamed)
         destination = install_skill.install("claude", home=self.home, source=renamed)
         self.assertEqual(destination.name, "statistics-advisor")
