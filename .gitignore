@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Editor / local settings
+.vscode/
+.idea/
+
+# Secrets and local config
+.env
+.env.*
+
+# Generated packages (rebuild with: python3 tools/package_skill.py)
+dist/
+
+# Operating system
+.DS_Store
+Thumbs.db
