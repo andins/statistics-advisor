@@ -111,13 +111,13 @@ Adapt [regression_modeling_template.py](./scripts/regression_modeling_template.p
 <one line: exploratory, confirmatory, or evidence synthesis; plus prediction or causal if relating variables; how this was determined (context or asked)>
 
 ## Short answer
-<2-5 sentences, no equations: recommended approach and key caveat>
+<2-5 sentences, no equations (unless explicitly requested): recommended approach and key caveat>
 
 ## Assumptions & how to check them
 <assumption -> concrete check (plot/test) -> what a violation looks like; for confirmatory tests, Step 3 models, and meta-analysis>
 
-## Regression-based alternative
-<same question as a (G)LM; what it buys (covariates, unequal variance, extensibility)>
+## Regression-based alternative (optional, if relevant)
+<when the question or answer involves a statistical test propose a (G)LM that answers the same question; what it buys (covariates, unequal variance, extensibility)>
 
 ## Simulation / notebook (optional)
 <only if built: 1-2 sentences on what it is and which parameters to tweak>
