@@ -20,6 +20,7 @@ Answer statistics questions reliably: established theory, verifiable references,
 7. **Offer the fix, not just the flag.** If assumptions look shaky, name the standard remedy (Welch's t/ANOVA, robust or bootstrap SEs, nonparametric test, Bayesian model).
 8. **Prediction ≠ causation.** A well-fitting predictive model is not "X causes Y", and a causal estimate still needs a design or adjustment strategy, not just a good fit (SHMUELI_EXPLAIN_PREDICT). Design beats adjustment (Step 2a).
 9. **Say when you're unsure** (formula edge case, page number, whether a result generalizes) instead of guessing.
+10. **Simulate to understand.** In order to better understand how a method works, how sensible it is to assumptions and how results change under different scenarios, generate synthetic data with known properties using `simulate_data_template.py`. An example of this is `ttest_vs_regression_example.py` (adapt per `test-regression-equivalents.md`).
 
 ## Workflow
 
@@ -127,20 +128,12 @@ Prefer a runnable, parameterized artifact over prose-only advice, and an actual 
 | Modeling (3) | `regression_modeling_template.py` | pass the DAG's adjustment set in observational mode |
 | Clustered / time series (3) | `clustered_and_timeseries_template.py` | default to complete/no pooling |
 | Meta-analysis (1c) | `meta_analysis_template.py` | set `DATA_PATH`/`EFFECT_COL`/`SE_COL`; `HKSJ=True` with few studies |
-| Test vs regression simulation | `ttest_vs_regression_example.py` | see below |
-
-**Build a simulation notebook when** the user is analyzing data (simulation shows when the method works and when it breaks), asks "which test should I use", wants to see assumption violations, wants a classical-vs-regression comparison, or a worked example would resolve ambiguity faster than prose. Skip it for simple definitional questions.
-
-Simulation notebook recipe (structure from `ttest_vs_regression_example.py`; adapt ANOVA → `lm(y ~ group)`, chi-squared → logistic/Poisson, per the mapping in test-regression-equivalents.md):
-1. Simulate from a known ground truth (`numpy`/`scipy`).
-2. Run the classical test (`scipy.stats`) and the regression equivalent (`statsmodels`) side by side.
-3. Check assumptions with `assumption_checks.py` (Shapiro-Wilk + QQ plot, Levene, residual plots).
-4. Compare estimate, CI/SE, p-value, conclusion; they should agree when assumptions hold.
-5. Expose the key parameters so the user can see when and why the two approaches diverge.
+| Test vs regression simulation | `ttest_vs_regression_example.py` | compare classical and regression-based tests under controlled simulations |
+| Simulation | `simulate_data_template.py` | general template to tweak parameters to see method behavior under known ground truth |
 
 ## Reference files
 
 - [analysis-triage.md](./references/analysis-triage.md): questions, signals and rationale for Steps 0-2a, DAG elicitation, missing data
 - [test-regression-equivalents.md](./references/test-regression-equivalents.md): test decision guide, assumptions, regression equivalents
 - [core-references.md](./references/core-references.md): reference keys and citation discipline
-- `scripts/`: `power_analysis_template.py`, `assumption_checks.py`, `ttest_vs_regression_example.py`, `eda_template.py`, `causal_dag_builder.py`, `regression_modeling_template.py`, `clustered_and_timeseries_template.py`, `meta_analysis_template.py`
+- `scripts/`: `power_analysis_template.py`, `assumption_checks.py`, `simulate_data_template.py`, `ttest_vs_regression_example.py`, `eda_template.py`, `causal_dag_builder.py`, `regression_modeling_template.py`, `clustered_and_timeseries_template.py`, `meta_analysis_template.py`
