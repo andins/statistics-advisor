@@ -7,8 +7,6 @@ An [Agent Skills](https://agentskills.io) folder (`SKILL.md`, references, helper
 | [`statistics-advisor/`](./statistics-advisor) | The skill itself: `SKILL.md`, `references/` (triage logic, citation list, test-vs-regression equivalents) and `scripts/` (runnable reference templates for EDA, power analysis, regression/GLM modeling, assumption checks, causal DAGs, clustered/time-series data, meta-analysis, and a worked t-test-vs-regression example). |
 | [`tools/`](./tools) | Scripts to install the skill into an agent tool, to package it for web chats, and to test both of the above. |
 
-This skill is self-contained: nothing under `statistics-advisor/` links to or depends on anything outside this repository.
-
 ## License
 
 [MIT](./LICENSE).
@@ -21,15 +19,14 @@ python3 tools/install_skill.py --tool copilot             # for VS Code chat (Gi
 python3 tools/install_skill.py --tool agents              # for Codex (and other tools reading ~/.agents)
 python3 tools/install_skill.py --tool claude --project ~/projects/my-first-analysis
 python3 tools/install_skill.py --tool gemini --dry-run    # show what would happen
+python3 tools/package_skill.py                            # Package the skill in dist/ folder for web chats
 ```
 
-To update: `git pull`, then run the same command again; the old copy is replaced.
-
-The installer and packager need only the Python standard library. Run from anywhere; the skill is found relative to `tools/`, so it does not matter what the repository folder is called (for example after downloading a ZIP).
+The installer and packager need only the Python standard library. Run from anywhere; the skill is found relative to `tools/`, so it does not matter what the repository folder is called.
 
 ## For maintainers
 
-Everything below runs from this folder. Testing the reference templates (`test_skill_templates.py`) needs the scientific Python stack — install it with `uv sync` (see `pyproject.toml`); that test skips itself when the stack is missing.
+Testing the reference templates (`test_skill_templates.py`) needs the scientific Python stack — install it with `uv sync` (see `pyproject.toml`); that test skips itself when the stack is missing.
 
 | Task | Command |
 |---|---|

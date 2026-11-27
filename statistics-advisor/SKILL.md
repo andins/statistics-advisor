@@ -1,159 +1,146 @@
 ---
 name: statistics-advisor
-description: 'Use for any statistics question: sample-size/power or precision planning before data collection; triaging exploratory vs. confirmatory analysis, experimental vs. observational causal questions, and prediction vs. causal goals; visualization-first EDA; eliciting a causal DAG; choosing, explaining or checking the assumptions of hypothesis tests (t-test, ANOVA, chi-squared, Wilcoxon/Mann-Whitney, Kruskal-Wallis, correlation); explaining statistical concepts; comparing classical tests with their regression/GLM equivalents; building regression/GLM models to quantify relationships or predict outcomes; meta-analysis (pooling effect estimates across studies, heterogeneity, publication bias). Gives citation-backed, assumption-aware answers (classic textbooks, Andrew Gelman''s blog) and can generate Python notebooks/scripts for power analysis, EDA, causal DAGs, test-vs-regression simulation, predictive/causal modeling and meta-analysis.'
+description: 'Use for any statistics question: sample-size/power or precision planning before data collection; triaging exploratory vs. confirmatory analysis, experimental vs. observational causal questions, and prediction vs. causal goals; EDA; eliciting a causal DAG; choosing, explaining or checking the assumptions of hypothesis tests (t-test, ANOVA, chi-squared, Wilcoxon/Mann-Whitney, Kruskal-Wallis, correlation); explaining statistical concepts; comparing classical tests with their regression/GLM equivalents; building regression/GLM models to quantify relationships or predict outcomes; meta-analysis (pooling effect estimates across studies, heterogeneity, publication bias). Gives citation-backed, assumption-aware answers and can generate Python notebooks/scripts and synthetic data to check methods and understand concepts.'
 ---
 
 # Statistics Advisor
 
-## Purpose
+Answer statistics questions reliably: established theory, verifiable references, honest assumptions, and runnable, parameterized code when it helps. The skill covers the whole arc of a question: is data collection even done (Step 0), what kind of analysis is this (Steps 1-2), and which test, model, or synthesis fits (Steps 1a-1c, 3).
 
-Answer statistics questions reliably, using well-established theory, with verifiable references, honest treatment of assumptions, and (when useful) runnable code that lets the user poke at the key parameters themselves. This covers the full arc of a statistical question, not just "which test do I run": first whether data collection is even done yet, then what *kind* of analysis this is (Steps 0-2 below), then the test, model, or exploration appropriate to it, and, when the data are the results of several studies, how to combine them (Step 1c). The decision logic is the Workflow section below.
+**Division of labor:** this file says *what to do and which script to use*. [analysis-triage.md](./references/analysis-triage.md) says *how to decide* (questions to ask, signals, rationale, DAG elicitation). Read the relevant triage section whenever a step below says "see Q…".
 
-## Core principles (apply to every answer)
+## Core principles (every answer)
 
-1. **Triage before method.** Classical hypothesis testing — p-values, a pre-specified alpha, "reject/fail to reject" — is only meaningful for *confirmatory* analysis of a well-designed experiment or a comparison decided before seeing the data; it should generally be avoided for open-ended, exploratory, or observational questions, not just handled with extra caution. Even inside that ideal setting it isn't the best available tool: an estimate with its uncertainty interval is more informative than the accept/reject dichotomy a p-value forces, so lead with that regardless of branch (see principle 6). Likewise, "quantify the relationship" means something different for prediction than for causal interpretation. If data hasn't even been collected yet, the right question is a design one (power/precision), not a test choice. Always resolve these questions first (Step 0/1) — ask the user if the answer isn't clear from context. See [analysis-triage.md](./references/analysis-triage.md).
-2. **Cite sources.** Every non-trivial claim gets a reference (author, year, title, and chapter/section when known). See [core-references.md](./references/core-references.md) for the canonical list and citation discipline — in particular, **never fabricate a page number**. Cite by chapter/section title if the exact page isn't verified; use `fetch_webpage` on statmodeling.stat.columbia.edu or a publisher page if the user needs a precise locator and it's worth the lookup.
-3. **Summary before math.** Start with a short (2-5 sentence), plain-English, correct answer. Push derivations/equations after it, and make them skippable.
-4. **Assumptions are not optional.** Any time a classical test is recommended, state its assumptions and give a concrete way to check each one (plot or diagnostic test). Never report "the test says X" without this.
-5. **Regression framing.** Classical tests (t-test, ANOVA, chi-squared) are special cases of a (generalized) linear model. Offer the regression-equivalent formulation as the robust, extensible default — it relaxes more easily (unequal variances, covariates, non-normal errors via GLM families). For clustered/grouped or time-dependent data, independence can fail in a structured way that a single robust-SE fix doesn't cover — see [clustered_and_timeseries_template.py](./scripts/clustered_and_timeseries_template.py) and Step 3. See [test-regression-equivalents.md](./references/test-regression-equivalents.md).
-6. **Beyond p ≥/< 0.05, always.** Lead with effect sizes and interval estimates instead of a significant/non-significant verdict — this is about using a more informative tool to learn from the data, not a matter of trusting the p-value more or less, and it holds even in a well-designed confirmatory experiment where the p-value is at its best-calibrated. Flag multiple-comparisons / "garden of forking paths" risk when relevant. This is a recurring theme of Gelman's blog and papers — cite the specific paper, don't just wave at "the blog".
-7. **Offer the honest alternative.** If assumptions look shaky, name the standard fix (Welch's test instead of Student's, Welch's ANOVA, robust/bootstrap SEs, nonparametric test, or a Bayesian model) rather than just flagging a problem.
-8. **Prediction ≠ causal interpretation.** Don't let a well-fitting predictive model be read as "X causes Y," and don't let a causal estimate skip covariate adjustment just because a model "fits." Each has its own criteria for success (SHMUELI_EXPLAIN_PREDICT) — see Step 2.
-9. **Design beats adjustment.** For a causal question, always ask whether the exposure was assigned by a well-designed experiment before reaching for a DAG and adjustment — randomization identifies the effect by construction and is a strictly stronger guarantee than any observational adjustment set (IMBENS_RUBIN). See Step 2a.
-10. **Missing data gets flagged, not silently dropped.** Report how much data is missing and from where (EDA step); the default fix is listwise deletion, stated explicitly with the row count dropped — point to LITTLE_RUBIN_MISSING instead of improvising a fix if the missingness looks substantial or outcome-related.
-11. **Design the sample size, don't just test for one.** If the data isn't collected yet, plan power (for a pre-specified test) or precision (for a CI width) before collecting — and never substitute post-hoc/observed power computed after the fact (HOENIG_HEISEY_2001). See Step 0.
-12. **Measurement error isn't just noise.** If a predictor is a known imprecise proxy (self-report, assay/sensor error, a stand-in for the real construct), flag that naive regression on the observed value biases the slope toward zero (attenuation) and that more data doesn't fix it (FULLER_MEASUREMENT_ERROR) — point to a measurement-error/errors-in-variables model instead of reporting the naive estimate as final. See Step 3.
-13. **Combine estimates, not verdicts.** When the data are the results of several studies, pool each study's effect estimate and standard error (random effects by default), report heterogeneity (tau, I²) and a prediction interval alongside the CI of the average, and never count significant studies or pool p-values. A meta-analysis inherits the biases of its studies and of how they were selected; flag study quality and publication bias, and never present a pooled interval as tighter than the evidence behind it (BORENSTEIN_2009; INTHOUT_2016). See Step 1c.
-14. **Say when you're not sure.** If a detail (exact formula edge case, a specific page number, whether a result generalizes) isn't something you're confident of, say so explicitly instead of guessing.
+1. **Triage before method.** Resolve Steps 0-1 first. If context doesn't settle it, ask the user; never assume "confirmatory" just because they said "test" or "significant".
+2. **Cite sources.** Every non-trivial claim gets a reference (author, year, title, chapter/section if known). Use the keys in [core-references.md](./references/core-references.md) and follow its citation discipline. **Never fabricate a page number**; cite by chapter/section, or fetch the page (e.g. statmodeling.stat.columbia.edu, a publisher page) if a precise locator is worth the lookup.
+3. **Summary before math.** Open with a correct 2-5 sentence plain-English answer; put derivations after it, skippable.
+4. **Assumptions are not optional.** Whenever a classical test or model is recommended, state each assumption with a concrete check (plot or diagnostic). Never report "the test says X" without them.
+5. **Estimates over verdicts.** In every branch, lead with the effect size and its interval, not significant/non-significant (GELMAN_CARLIN_2014). Flag multiple-comparisons / forking-paths risk when relevant, citing the specific paper rather than "the blog".
+6. **Regression framing.** Classical tests are special cases of a (G)LM; offer the regression equivalent as the extensible default ([test-regression-equivalents.md](./references/test-regression-equivalents.md)).
+7. **Offer the fix, not just the flag.** If assumptions look shaky, name the standard remedy (Welch's t/ANOVA, robust or bootstrap SEs, nonparametric test, Bayesian model).
+8. **Prediction ≠ causation.** A well-fitting predictive model is not "X causes Y", and a causal estimate still needs a design or adjustment strategy, not just a good fit (SHMUELI_EXPLAIN_PREDICT). Design beats adjustment (Step 2a).
+9. **Say when you're unsure** (formula edge case, page number, whether a result generalizes) instead of guessing.
 
 ## Workflow
 
-### Step 0 — Has the data already been collected?
+### Step 0: Has the data been collected?
 
-If not — the user is planning a study/experiment/data-collection effort and asking "how many samples do I need" — this is a design-phase question, not an analysis of existing data. See [analysis-triage.md](./references/analysis-triage.md), Question 0, and use [power_analysis_template.py](./scripts/power_analysis_template.py):
-- **Planned hypothesis test**: `analytic_sample_size()` for standard designs (t-test, ANOVA, proportions, correlation, chi-squared); `simulate_power()`/`find_sample_size_by_simulation()` (Monte Carlo) for anything else (regression with covariates, GLMs, clustering, multilevel designs). Source the effect size carefully — not a face-value point estimate from a small pilot (Type M error risk, GELMAN_CARLIN_2014) — and report a small sensitivity table across plausible effect sizes, not one number presented as exact.
-- **Precision/CI-width planning** (no single test, e.g. survey sample size): `precision_sample_size_mean()` / `precision_sample_size_proportion()`.
-- **Never compute observed/post-hoc power** on data already collected — it's a deterministic function of the p-value (HOENIG_HEISEY_2001); use a CI-width/Type S/M check instead (GELMAN_CARLIN_2014).
+If not (e.g. "how many samples do I need?"), it's a design question. See Q0. Use [power_analysis_template.py](./scripts/power_analysis_template.py):
+- **Planned test, standard design** (t-test, ANOVA, proportions, correlation, chi-squared): `analytic_sample_size()`.
+- **Planned test, anything else** (covariates, GLMs, clustering, multilevel): `simulate_power()` / `find_sample_size_by_simulation()`.
+- **CI-width/precision goal** (no single test, e.g. survey): `precision_sample_size_mean()` / `precision_sample_size_proportion()`.
+- Always give a **sensitivity table** across plausible effect sizes (not a face-value pilot estimate; Type M risk, GELMAN_CARLIN_2014). **Never compute observed/post-hoc power** (HOENIG_HEISEY_2001); check CI width and Type S/M error instead.
 
-Once data collection is planned or already done, proceed to Step 1.
+Once collection is planned or done, go to Step 1.
 
-### Step 1 — Triage: exploratory or confirmatory?
+### Step 1: Triage the analysis type
 
-Resolve this first, every time. If it isn't clear from context, **ask the user** (see [analysis-triage.md](./references/analysis-triage.md) for example framings and the signals that point each way).
+Decide per Q1 / Q1c, asking the user if unclear:
+- **Confirmatory** (pre-specified comparison, designed experiment/RCT) → 1a
+- **Exploratory** (open-ended, observational, "what drives X") → 1b
+- **Evidence synthesis** (rows are *studies*; pooled estimates, heterogeneity, forest/funnel plots, publication bias) → 1c
 
-- **Confirmatory** (pre-specified hypothesis, designed experiment/RCT, or a comparison decided before seeing this data): go to Step 1a.
-- **Exploratory** (open-ended, observational, hypothesis-generating, "what's going on here"/"what drives X"): go to Step 1b.
-- **Evidence synthesis** (the rows are *studies*: the user wants to combine effect estimates from several studies, or asks about pooled estimates, heterogeneity, forest/funnel plots or publication bias): go to Step 1c.
+**1a. Confirmatory**
+1. Classify the request: (a) which test, (b) assumption checking, (c) concept explanation, (d) classical test vs regression, (e) interpreting existing output.
+2. Look up the test family in [test-regression-equivalents.md](./references/test-regression-equivalents.md) (assumptions, checks, regression equivalent, fallback, references).
+3. Answer with the template below: effect size + CI first, significance verdict as secondary context.
+4. If the comparison is about a treatment/exposure effect, continue to Step 2 rather than treating "significant" as "causal".
 
-**Step 1a — Confirmatory branch (classical test workflow):**
-1. Classify the question: (a) which test to use, (b) assumption-checking, (c) concept explanation, (d) "classical test vs regression" comparison, or (e) interpreting output the user already has.
-2. Look up the relevant row in [test-regression-equivalents.md](./references/test-regression-equivalents.md) for the test family involved (assumptions, checks, regression equivalent, robust/nonparametric fallback, references).
-3. Draft the answer using the Answer Template below — lead with the effect-size estimate and its confidence interval, with the significance verdict as secondary context rather than the headline — decide if a simulation notebook adds value (see criteria below), and close with references.
-4. **If the comparison is about a treatment/exposure's effect** (not just whether two samples differ), the test's p-value isn't the end of the line — continue to Step 2 so the causal-vs-predictive framing and (if causal) the experiment-vs-observational question get addressed explicitly, rather than silently treating "significant" as "causal."
+**1b. Exploratory**
+1. Don't make p-values the primary output; frame findings as hypothesis-generating (GELMAN_LOKEN_2014). Basic data hygiene (missingness, impossible values) is always fine; see Q1.
+2. Start with visualization-first EDA: adapt [eda_template.py](./scripts/eda_template.py) to the dataset's columns (TUKEY_EDA).
+3. Offer (G)LMs as *descriptive* tools: effect sizes and intervals framed as "what this sample shows".
+4. Go to Step 2 if the user wants prediction or causal claims.
 
-**Step 1b — Exploratory branch:**
-1. **Avoid p-values/significance tests as the primary output here.** Outside a well-designed experiment they don't carry their advertised guarantees, no matter how carefully they're computed — flag the garden-of-forking-paths risk (GELMAN_LOKEN_2014) and frame any pattern found here as hypothesis-generating, not confirmed.
-2. **Propose visualization-first EDA as the concrete first step.** Use [eda_template.py](./scripts/eda_template.py) as the structural template — adapt it to the dataset's actual columns and build it out as a notebook (per the Notebook Workflow below) so the user can look at univariate distributions, missingness, pairwise relationships, subgroup structure, and trends before anything else (TUKEY_EDA).
-3. **Offer regression/GLM models as a descriptive tool** once patterns emerge — report effect sizes/intervals framed as "what this sample shows," not as confirmed inference.
-4. Proceed to Step 2 once the user wants to go beyond description to prediction or causal claims.
+**1c. Evidence synthesis (meta-analysis)** using [meta_analysis_template.py](./scripts/meta_analysis_template.py)
+1. **Confirm it qualifies** (Q1c): raw data from every site means a clustered model (see Step 3), not pooled summaries. Each study needs an effect on a common scale *and its standard error*; convert with `effect_sizes_from_summaries()`.
+2. **Pool** with `pool_random_effects()` (random effects by default; `hksj=True`, or a Bayesian model, when there are few studies, roughly under 5-10, and say how few; INTHOUT_2014). Report (via `summarize()`) the pooled estimate + CI, tau, I², and the **prediction interval** (INTHOUT_2016); show `forest_plot()`.
+3. **Probe fragility and bias:** `leave_one_out()`; `funnel_plot()` + `egger_test()` (weak under ~10 studies, so a warning light, not proof; STERNE_2011).
+4. **State the limits:** the pool is only as good as the studies and how they were found (PAGE_PRISMA_2021, publication bias). Observational studies bring their confounding; don't blend randomized and observational designs into one number without saying so. Non-independent estimates from one study need one-per-study or a clustered model. Subgroup/meta-regression is exploratory. Never pool p-values or count significant studies; never present the pool as tighter than the evidence (BORENSTEIN_2009).
+5. **Template:** put "evidence synthesis" on the Analysis type line; use the meta-analysis assumptions/checks in section 10 of test-regression-equivalents.md (equivalent: intercept-only weighted regression, or a multilevel model with study as cluster). Cite BORENSTEIN_2009 and COCHRANE_HANDBOOK.
 
-**Step 1c — Evidence synthesis (meta-analysis):**
-1. **Check it really is one.** If the user has the raw data from every site, analyze it as clustered data (see the clustering section below) rather than pooling summaries. Otherwise confirm each study gives an effect on one common scale (convert with `effect_sizes_from_summaries()` in [meta_analysis_template.py](./scripts/meta_analysis_template.py)) and its *standard error*. See Question 1c in [analysis-triage.md](./references/analysis-triage.md) for the questions to ask: how studies were found, how many there are, whether estimates are independent, whether designs are mixed.
-2. **Pool with a random-effects model** (`pool_random_effects()`); use the Hartung-Knapp interval (`hksj=True`) or suggest a Bayesian model when there are few studies (roughly under 5-10), and say how few there are (INTHOUT_2014). Report the pooled estimate with its CI, tau and I², and the **prediction interval** (INTHOUT_2016); show a forest plot.
-3. **Check fragility and bias:** `leave_one_out()`, and `funnel_plot()` with `egger_test()` — both weak below ~10 studies (STERNE_2011), so frame them as a warning light, not proof. Pool estimates, never p-values or counts of significant studies.
-4. **State the limits explicitly:** the pooled estimate is only as good as the studies (observational studies carry their confounding into the pool; do not blend randomized and observational designs into one number without saying so — Step 2a) and as unbiased as the way they were found (search protocol, PAGE_PRISMA_2021, publication bias). Several estimates from one study are not independent. Subgroup/meta-regression analyses are exploratory.
-5. **Answer template:** write "evidence synthesis" on the Analysis type line, and under "Assumptions & how to check them" use the meta-analysis assumptions and checks in section 10 of [test-regression-equivalents.md](./references/test-regression-equivalents.md) (which also gives the regression equivalent: an intercept-only weighted regression, or a multilevel model with study as the cluster). Cite BORENSTEIN_2009 and COCHRANE_HANDBOOK.
+### Step 2: Relating variables: prediction or causal?
 
-### Step 2 — If relating variables: prediction or causal interpretation?
+Applies to any attempt to relate variables, including a confirmatory treatment-effect test from 1a. Ask if unclear (Q2).
+- **Predictive** → Step 3 (predictive mode): judge by out-of-sample validation, regularization, proper scoring.
+- **Causal** → Step 2a first. Don't jump straight to a DAG.
 
-Needed whenever the goal is to relate variables — including a confirmatory treatment/exposure-effect test carried over from Step 1a, not just open-ended modeling. Ask if unclear — see [analysis-triage.md](./references/analysis-triage.md) for example framing.
+### Step 2a: Causal only: was the exposure assigned by a well-designed experiment?
 
-- **Predictive**: go straight to the modeling step — emphasize out-of-sample validation (train/test split, cross-validation), regularization, and proper scoring; any available predictor is fair game.
-- **Causal**: go to Step 2a before modeling — do not jump straight to a DAG.
+Ask directly (wording and consequences in Q2a).
+- **Yes**: assignment already blocks every backdoor path (IMBENS_RUBIN), so no confounding DAG is needed. Optionally pick **pre-treatment** covariates for precision only (ANCOVA-style); never adjust for post-assignment variables. → Step 3, **experimental** mode.
+- **No**: build a DAG, then Step 3 in **observational** mode, and state that the estimate rests on no unmeasured confounding (HERNAN_ROBINS). If it sounds like a natural experiment, instrument, discontinuity, or pre/post with control, flag that IV/DID/RDD might be more credible; implementing them is out of scope, so note it as a direction only.
 
-### Step 2a — Causal branch only: was the exposure assigned by a well-designed experiment?
+**DAG procedure** (required for observational, precision-only for experimental), using [causal_dag_builder.py](./scripts/causal_dag_builder.py):
+1. `create_schema_template()` with the dataset's actual columns.
+2. Fill it in with the user using the elicitation questions in analysis-triage.md (include **unrecorded** variables; PEARL_CAUSALITY; PEARL_BOOK_OF_WHY).
+3. `validate_schema()` first (rejects cycles/dangling edges; fix the DAG, never ignore the error), then `draw_dag()`, then `naive_adjustment_set()`.
+4. Say that the adjustment set is a **heuristic, not a verified backdoor-criterion result**; beyond a small DAG, recommend checking with `dagitty` or a domain expert.
 
-Ask directly: was the exposure assigned by the researcher (or by some other mechanism outside the units' control) independently of the units' other characteristics — e.g. randomized assignment in a designed experiment? See [analysis-triage.md](./references/analysis-triage.md) for the full framing and consequences.
+### Step 3: Modeling
 
-- **Yes (experiment)**: random/as-good-as-random assignment already blocks every backdoor path, measured or not (IMBENS_RUBIN) — this is a stronger guarantee than any observational adjustment set. A full confounding-oriented DAG is not required. A lightweight covariate list is still useful, but only to pick **pre-treatment** covariates for precision (ANCOVA-style) — never adjust for anything measured after assignment. Go to Step 3 in **experimental** causal mode.
-- **No (observational exposure)**: go to the DAG step below, then Step 3 in **observational** causal mode, and say explicitly that the estimate rests on the no-unmeasured-confounding assumption (HERNAN_ROBINS). If the setup sounds like a natural experiment, instrument, discontinuity, or clean pre/post-with-control comparison, flag that a quasi-experimental design (IV/DID/RDD) might identify the effect more credibly — note it as a direction to investigate further; implementing those methods is out of scope for this version of the skill.
+Adapt [regression_modeling_template.py](./scripts/regression_modeling_template.py): set `MODE` to `"predictive"` or `"causal"`, and for causal set `IDENTIFICATION` to `"experiment"` or `"observational"`.
+- **Causal, experimental:** exposure coefficient (unadjusted, or adjusted for pre-treatment precision covariates only) with a CI; the design, not the adjustment, makes it causal (IMBENS_RUBIN).
+- **Causal, observational:** adjust only for the DAG-derived set; report the coefficient with a CI and the identifying assumption (no unmeasured confounding in that set, correct functional form) (HERNAN_ROBINS).
+- **Predictive:** judge by held-out performance (CV/test R², RMSE, AUC); don't read coefficients causally.
+- **Missing data (any mode):** default is listwise deletion, reporting the row count and fraction dropped; if substantial or outcome-related, point to LITTLE_RUBIN_MISSING rather than improvising (see triage, "Missing data").
+- **Multicollinearity (>1 predictor):** run `check_multicollinearity()` from [assumption_checks.py](./scripts/assumption_checks.py) before trusting individual coefficients (OBRIEN_2007).
+- **Measurement error (noisy proxy predictor or outcome: self-report, assay/sensor error, stand-in construct):** naive regression biases the slope toward zero (attenuation) and more data doesn't fix it (FULLER_MEASUREMENT_ERROR). Say so and point to regression calibration, SIMEX, or a latent-variable model instead of reporting the naive estimate as final.
+- **Clustered or time-dependent data:** see next section before assuming independence.
 
-**Building the causal DAG** (required for the observational branch, optional/precision-only for the experimental branch): use [causal_dag_builder.py](./scripts/causal_dag_builder.py) to generate a schema pre-populated with the dataset's recorded variables, then guide the user through the elicitation questions in [analysis-triage.md](./references/analysis-triage.md) (role of each variable, edge directions, timing, mechanism) — explicitly invite them to add **unrecorded** variables (e.g. unmeasured confounders) they believe play a causal role, so that assumption is explicit rather than silent (PEARL_CAUSALITY; PEARL_BOOK_OF_WHY). Call `validate_schema()` first (rejects cycles and dangling edge references — fix the DAG, don't ignore the error), then visualize it with `draw_dag()` and get a first-pass adjustment set with `naive_adjustment_set()`, flagging that it's a heuristic, not a verified backdoor-criterion result.
-
-### Step 3 — Modeling: quantify relationships and/or predict
-
-Use [regression_modeling_template.py](./scripts/regression_modeling_template.py), branching on the Step 2/2a answer:
-- **Causal, experimental mode**: report the exposure coefficient (unadjusted, or adjusted only for pre-treatment precision covariates) with a CI; the experiment's design is what makes it causal, not the adjustment (IMBENS_RUBIN).
-- **Causal, observational mode**: adjust only for the DAG-identified adjustment set; report the exposure coefficient with a CI and state the identifying assumption explicitly (no unmeasured confounding in that set, correct functional form) (HERNAN_ROBINS).
-- **Predictive mode**: judge purely by held-out performance (CV / test-set R², RMSE, AUC, etc.); don't interpret coefficients causally.
-- **Missing data, any mode**: report rows dropped via listwise deletion explicitly; point to LITTLE_RUBIN_MISSING rather than improvising if missingness is substantial.
-- **Multicollinearity, any mode with >1 predictor**: run `check_multicollinearity()` from [assumption_checks.py](./scripts/assumption_checks.py) on the predictor/adjustment set before trusting individual coefficients (OBRIEN_2007).
-- **Measurement error, any mode**: if a predictor or outcome is a known noisy proxy (self-report, assay/sensor precision, a stand-in for the real construct), say so explicitly — it biases the coefficient toward zero (attenuation), not just the SE, and doesn't improve with sample size (FULLER_MEASUREMENT_ERROR). Point to a measurement-error-aware approach (regression calibration, SIMEX, or a latent-variable model) instead of reporting the naive estimate as final.
-- **Clustered or time-dependent data**: see below before assuming the plain model's independence assumption holds.
-
-### Clustering and time dependence (check within Step 3, whenever relevant)
-
-Use [clustered_and_timeseries_template.py](./scripts/clustered_and_timeseries_template.py):
-- **Clustered/hierarchical data** (grouped or repeated observations): default to **complete pooling** (plus cluster-robust SEs) when the groups are a nuisance, not the focus, or **no pooling** (per-cluster fixed effects) when there are few groups that are themselves of interest with enough data each. Only build the **multilevel/partial-pooling** model if the user specifically asks for one — it's the most information-efficient option for many/uneven-sized groups or generalizing to new groups (GELMAN_HILL_YAJIMA; MCELREATH_RETHINKING), but also the most complex to fit and explain. A random-effects meta-analysis (Step 1c) is this same multilevel model with studies as the clusters; raw data from several sites belongs here, not in a meta-analysis.
-- **Time-dependent data**: check residual autocorrelation with `check_autocorrelation()` first — if it's small/not significant, say explicitly that treating the data as iid is a reasonable approximation rather than reflexively reaching for a time-series model. If autocorrelation is present but only inference needs fixing, refit with HAC/Newey-West SEs (`fit_regression_hac`) (NEWEY_WEST_1987). If the dependence structure itself matters (forecasting, strong/seasonal autocorrelation), move to a proper time-series model (lagged predictors, `ARIMA`/`SARIMAX`, or an AR covariance structure) — `sketch_arima_fit()` is a minimal starting point, not a full workflow.
-- **Bayesian multilevel modeling**: only propose `fit_bayesian_multilevel()` (PyMC, with a `bambi` formula-interface shortcut when installed) if the user specifically asks for a Bayesian approach — these are optional, heavier dependencies (`pip install pymc bambi arviz`) outside this skill's baseline.
+**Clustering and time dependence** ([clustered_and_timeseries_template.py](./scripts/clustered_and_timeseries_template.py)):
+- **Clustered/hierarchical:** default to **complete pooling + cluster-robust SEs** when groups are a nuisance, or **no pooling** (cluster fixed effects) when there are few groups of interest with enough data each. Build **multilevel/partial pooling** only if asked (best for many/uneven groups or generalizing to new groups, but costliest to fit and explain; GELMAN_HILL_YAJIMA; MCELREATH_RETHINKING). A random-effects meta-analysis is this same model with studies as clusters.
+- **Time-dependent:** run `check_autocorrelation()` on residuals first. If small, say iid is a reasonable approximation. If present but only inference is affected, use `fit_regression_hac` (HAC/Newey-West; NEWEY_WEST_1987). If the dependence itself matters (forecasting, seasonality), use a time-series model (lags, `ARIMA`/`SARIMAX`, AR covariance); `sketch_arima_fit()` is only a starting point.
+- **Bayesian multilevel:** only on request, via `fit_bayesian_multilevel()` (PyMC, optional `bambi`; `pip install pymc bambi arviz`, outside the baseline dependencies).
 
 ## Answer template
 
 ```markdown
 ## Analysis type
-<one line: exploratory, confirmatory or evidence synthesis (pooling several studies), and (if a relationship/model is involved) prediction or causal -- state how this was determined (from context, or by asking)>
+<one line: exploratory, confirmatory, or evidence synthesis; plus prediction or causal if relating variables; how this was determined (context or asked)>
 
 ## Short answer
-<2-5 sentences, no equations, states the recommended approach and the key caveat.>
+<2-5 sentences, no equations: recommended approach and key caveat>
 
 ## Assumptions & how to check them
-<for a confirmatory test or a Step 3 model: bullet list of assumption -> concrete check (plot/test) -> what violation looks like>
+<assumption -> concrete check (plot/test) -> what a violation looks like; for confirmatory tests, Step 3 models, and meta-analysis>
 
 ## Regression-based alternative
-<how to express the same question as a (G)LM; what it buys you (covariates, unequal variance, extensibility)>
+<same question as a (G)LM; what it buys (covariates, unequal variance, extensibility)>
 
 ## Simulation / notebook (optional)
-<only if built — 1-2 sentences pointing to the notebook/script and the key parameters to tweak>
+<only if built: 1-2 sentences on what it is and which parameters to tweak>
 
 ## References
-<author, year, title, chapter/section or URL — see core-references.md>
+<author, year, title, chapter/section or URL; see core-references.md>
 ```
 
-## When to build a simulation notebook (confirmatory / test-specific)
+## Runnable artifacts
 
-Build one when the user asks "which test should I use", asks to see assumption violations in action, asks to compare a classical test with its regression equivalent, or when a worked example will clearly resolve ambiguity faster than prose. Don't build one for a simple definitional question.
+Prefer a runnable, parameterized artifact over prose-only advice, and an actual `.ipynb` over a `.py` when it's a user-facing exploration. Put key parameters as commented plain variables at the top of the first code cell (e.g. `DATA_PATH`, `TARGET`, sample size, true effect, variance ratio, outlier contamination, alpha).
 
-Notebook workflow:
-1. **Simulate** data with `numpy`/`scipy` from a known ground truth (so the "right answer" is known).
-2. **Run the classical test** (`scipy.stats`) and **the regression equivalent** (`statsmodels`) side by side.
-3. **Check assumptions** with the diagnostics in [assumption_checks.py](./scripts/assumption_checks.py) (normality via Shapiro-Wilk + QQ plot, variance homogeneity via Levene's test, residual plots).
-4. **Compare**: point estimate, CI/SE, p-value, and conclusion from both approaches — they should agree when assumptions hold.
-5. **Expose key parameters at the top of the first code cell** as plain variables (sample size per group, true effect size, variance ratio between groups, skewness/outlier contamination, alpha) with a one-line comment on what each does, so the user can re-run and see when/why the classical test and the regression start to disagree.
-6. Use [ttest_vs_regression_example.py](./scripts/ttest_vs_regression_example.py) as the structural template (adapt the same pattern for ANOVA → `lm(y ~ group)`, chi-squared → logistic/Poisson regression, etc. — see the table in test-regression-equivalents.md for the exact mapping).
-7. Prefer creating an actual `.ipynb` (via the notebook editing tool) over a `.py` script when the target is a user-facing exploration artifact.
+| Need | Template | Notes |
+|---|---|---|
+| Sample size / precision (Step 0) | `power_analysis_template.py` | closed form when possible; sensitivity table |
+| EDA (1b) | `eda_template.py` | adapt to real columns |
+| DAG (2a) | `causal_dag_builder.py` | validate before drawing |
+| Modeling (3) | `regression_modeling_template.py` | pass the DAG's adjustment set in observational mode |
+| Clustered / time series (3) | `clustered_and_timeseries_template.py` | default to complete/no pooling |
+| Meta-analysis (1c) | `meta_analysis_template.py` | set `DATA_PATH`/`EFFECT_COL`/`SE_COL`; `HKSJ=True` with few studies |
+| Test vs regression simulation | `ttest_vs_regression_example.py` | see below |
 
-## Building the other artifacts (exploratory / causal / modeling)
+**Build a simulation notebook when** the user is analyzing data (simulation shows when the method works and when it breaks), asks "which test should I use", wants to see assumption violations, wants a classical-vs-regression comparison, or a worked example would resolve ambiguity faster than prose. Skip it for simple definitional questions.
 
-Same bias toward a runnable, parameterized artifact over prose-only advice, and same preference for an actual `.ipynb` when it's a user-facing exploration/elicitation artifact rather than a one-off check:
-
-- **Power/sample-size** (Step 0): adapt [power_analysis_template.py](./scripts/power_analysis_template.py) — prefer `analytic_sample_size()` when the design matches a closed form, and always report a sensitivity table across a few plausible effect sizes rather than a single value.
-- **EDA** (Step 1b): adapt [eda_template.py](./scripts/eda_template.py) to the dataset's real columns; keep `DATA_PATH`/`TARGET`/column lists as clearly-commented variables near the top, same as the test-simulation notebooks.
-- **Causal DAG elicitation** (Step 2a, observational branch, or precision covariates in the experimental branch): adapt [causal_dag_builder.py](./scripts/causal_dag_builder.py) — call `create_schema_template()` with the dataset's actual column names first, then fill in the schema together with the user per the elicitation questions in [analysis-triage.md](./references/analysis-triage.md), and run `validate_schema()` before trusting `draw_dag()`/`naive_adjustment_set()`.
-- **Modeling** (Step 3): adapt [regression_modeling_template.py](./scripts/regression_modeling_template.py), setting `MODE` to `"predictive"` or `"causal"` and, for causal mode, `IDENTIFICATION` to `"experiment"` or `"observational"` — in observational mode, pass in the adjustment set from the DAG step rather than an arbitrary covariate list. Run `check_multicollinearity()` whenever there's more than one predictor, and adapt [clustered_and_timeseries_template.py](./scripts/clustered_and_timeseries_template.py) whenever the data is grouped/repeated or time-ordered — default to complete or no pooling and only build the multilevel/Bayesian versions if asked.
-- **Meta-analysis** (Step 1c): adapt [meta_analysis_template.py](./scripts/meta_analysis_template.py) — set `DATA_PATH`/`EFFECT_COL`/`SE_COL` (and `HKSJ=True` with few studies), call `pool_random_effects()` then `summarize()`, `forest_plot()`, `leave_one_out()`, `funnel_plot()` and `egger_test()`; use `effect_sizes_from_summaries()` first if the user only has group means or counts.
+Simulation notebook recipe (structure from `ttest_vs_regression_example.py`; adapt ANOVA → `lm(y ~ group)`, chi-squared → logistic/Poisson, per the mapping in test-regression-equivalents.md):
+1. Simulate from a known ground truth (`numpy`/`scipy`).
+2. Run the classical test (`scipy.stats`) and the regression equivalent (`statsmodels`) side by side.
+3. Check assumptions with `assumption_checks.py` (Shapiro-Wilk + QQ plot, Levene, residual plots).
+4. Compare estimate, CI/SE, p-value, conclusion; they should agree when assumptions hold.
+5. Expose the key parameters so the user can see when and why the two approaches diverge.
 
 ## Reference files
 
-- [Analysis triage: has data been collected (power/precision), exploratory vs. confirmatory, prediction vs. causal, DAG elicitation questions](./references/analysis-triage.md)
-- [Test decision guide, assumptions & regression equivalents](./references/test-regression-equivalents.md)
-- [Core reference list & citation discipline](./references/core-references.md)
-- [Power/sample-size and precision planning template](./scripts/power_analysis_template.py)
-- [Assumption-check helper functions (incl. multicollinearity/VIF)](./scripts/assumption_checks.py)
-- [Worked example: two-sample t-test vs. OLS regression simulation](./scripts/ttest_vs_regression_example.py)
-- [EDA template: visualization-first exploratory analysis](./scripts/eda_template.py)
-- [Causal DAG elicitation/visualization/adjustment-set helper](./scripts/causal_dag_builder.py)
-- [Predictive/causal (G)LM modeling template](./scripts/regression_modeling_template.py)
-- [Clustered/hierarchical and time-dependent data: pooling choices, autocorrelation checks, optional Bayesian multilevel](./scripts/clustered_and_timeseries_template.py)
-- [Meta-analysis template: effect sizes from summaries, random-effects pooling, heterogeneity and prediction interval, forest/funnel plots, leave-one-out, Egger test](./scripts/meta_analysis_template.py)
-
+- [analysis-triage.md](./references/analysis-triage.md): questions, signals and rationale for Steps 0-2a, DAG elicitation, missing data
+- [test-regression-equivalents.md](./references/test-regression-equivalents.md): test decision guide, assumptions, regression equivalents
+- [core-references.md](./references/core-references.md): reference keys and citation discipline
+- `scripts/`: `power_analysis_template.py`, `assumption_checks.py`, `ttest_vs_regression_example.py`, `eda_template.py`, `causal_dag_builder.py`, `regression_modeling_template.py`, `clustered_and_timeseries_template.py`, `meta_analysis_template.py`
